@@ -103,6 +103,8 @@ static void updateMenuButtons() {
     [buttonModels addObject:shownButtonModel];
     IrisFlagTagButtonModel *hiddenButtonModel = [[IrisFlagTagButtonModel alloc] initWithConversationFlag:Hidden conversationTag:nil];
     [buttonModels addObject:hiddenButtonModel];
+    IrisFlagTagButtonModel *unreadButtonModel = [[IrisFlagTagButtonModel alloc] initWithConversationFlag:Unread conversationTag:nil];
+    [buttonModels addObject:unreadButtonModel];
     for (IrisConversationTag *tag in tagsArray) {
         IrisFlagTagButtonModel *buttonModel = [[IrisFlagTagButtonModel alloc] initWithConversationFlag:Tagged conversationTag:tag];
         [buttonModels addObject:buttonModel];
@@ -216,9 +218,9 @@ static void restoreiCloudState(bool shouldUpdateTagsArray, bool shouldUpdateMenu
 static void updateBadgeCount() {
     if (!menuButton) return;
     if (!shouldHideButtonBadge) {
-        [menuButton setBadgeCount:currentFlag == Shown ? hiddenUnreadCount : currentFlag == Tagged && currentTag ? shownUnreadCount + hiddenUnreadCount - currentTag.unreadCount : shownUnreadCount animated:true];
+        [menuButton setBadgeCount:currentFlag == Shown ? hiddenUnreadCount : currentFlag == Unread ? shouldSecureHiddenList ? shownUnreadCount : shownUnreadCount + hiddenUnreadCount : currentFlag == Tagged && currentTag ? shownUnreadCount + hiddenUnreadCount - currentTag.unreadCount : shownUnreadCount animated:true];
     }
-    [menuButton updateButtonBadgesWithShownUnreadCount:shownUnreadCount hiddenUnreadCount:hiddenUnreadCount animated:true];
+    [menuButton updateButtonBadgesWithShownUnreadCount:shownUnreadCount hiddenUnreadCount:hiddenUnreadCount shouldSecureHiddenList:shouldSecureHiddenList animated:true];
 }
 
 static void updateConversationsFlagsDict(NSString *key, bool condition, IrisConversationFlag flag) {
@@ -245,7 +247,7 @@ static NSMutableArray *filterConversations(NSArray *conversations, IrisConversat
     for (CKConversation *conversation in conversations) {
         bool allowed = false;
         bool hidden = conversation.shouldHide;
-        bool hiddenForTag = shouldSecureHiddenList && hidden;
+        bool shouldSecure = shouldSecureHiddenList && hidden;
         bool muted = !shouldShowMutedUnreadCountInButtonBadge && conversation.muted;
         switch (currentFlag) {
         case Hidden:
@@ -253,8 +255,12 @@ static NSMutableArray *filterConversations(NSArray *conversations, IrisConversat
                 allowed = true;
             }
             break;
+        case Unread:
+            if ([conversation hasUnreadMessages] && !shouldSecure) {
+                allowed = true;
+            }
         case Tagged:
-            if ([conversation tagMatchesTag:currentTag] && !hiddenForTag) {
+            if ([conversation tagMatchesTag:currentTag] && !shouldSecure) {
                 allowed = true;
             }
             break;
@@ -277,7 +283,7 @@ static NSMutableArray *filterConversations(NSArray *conversations, IrisConversat
             } else if (!muted) {
                 shownUnreadCount += conversation.unreadCount;
             }
-            if (!muted && !hiddenForTag && conversation.tag) {
+            if (!muted && !shouldSecure && conversation.tag) {
                 conversation.tag.unreadCount += conversation.unreadCount;
             }
         }
