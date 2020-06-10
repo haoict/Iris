@@ -35,6 +35,8 @@ static bool shouldHideHiddenUnreadCountFromSBBadge = false;
 static NSString *shouldHideHiddenUnreadCountFromSBBadgeKey = @"shouldHideHiddenUnreadCountFromSBBadge";
 static bool shouldHideButtonBadge = false;
 static NSString *shouldHideButtonBadgeKey = @"shouldHideButtonBadge";
+static bool shouldShowMutedUnreadCountInButtonBadge = false;
+static NSString *shouldShowMutedUnreadCountInButtonBadgeKey = @"shouldShowMutedUnreadCountInButtonBadge";
 static bool shouldSecureHiddenList = false;
 static NSString *shouldSecureHiddenListKey = @"shouldSecureHiddenList";
 static bool shouldShowButtonAfterAuthentication = false;
@@ -244,7 +246,7 @@ static NSMutableArray *filterConversations(NSArray *conversations, IrisConversat
         bool allowed = false;
         bool hidden = conversation.shouldHide;
         bool hiddenForTag = shouldSecureHiddenList && hidden;
-        bool muted = conversation.muted;
+        bool muted = !shouldShowMutedUnreadCountInButtonBadge && conversation.muted;
         switch (currentFlag) {
         case Hidden:
             if (hidden) {
@@ -1073,6 +1075,7 @@ static NSMutableArray *filterConversations(NSArray *conversations, IrisConversat
         shouldHideUnknownSenders = [settings objectForKey:shouldHideUnknownSendersKey] && [[settings objectForKey:shouldHideUnknownSendersKey] boolValue];
         shouldHideHiddenUnreadCountFromSBBadge = [settings objectForKey:shouldHideHiddenUnreadCountFromSBBadgeKey] && [[settings objectForKey:shouldHideHiddenUnreadCountFromSBBadgeKey] boolValue];
         shouldHideButtonBadge = [settings objectForKey:shouldHideButtonBadgeKey] && [[settings objectForKey:shouldHideButtonBadgeKey] boolValue];
+        shouldShowMutedUnreadCountInButtonBadge = [settings objectForKey:shouldShowMutedUnreadCountInButtonBadgeKey] && [[settings objectForKey:shouldShowMutedUnreadCountInButtonBadgeKey] boolValue];
         shouldSecureHiddenList = [settings objectForKey:shouldSecureHiddenListKey] && [[settings objectForKey:shouldSecureHiddenListKey] boolValue];
         shouldShowButtonAfterAuthentication = [settings objectForKey:shouldShowButtonAfterAuthenticationKey] && [[settings objectForKey:shouldShowButtonAfterAuthenticationKey] boolValue];
         shouldAutoHideHiddenList = [settings objectForKey:shouldAutoHideHiddenListKey] && [[settings objectForKey:shouldAutoHideHiddenListKey] boolValue];
