@@ -512,6 +512,7 @@ static NSMutableArray *filterConversations(NSArray *conversations, IrisConversat
     if (!shouldShowButton) {
         menuButton.alpha = 0;
         menuButton.hidden = true;
+        menuButton.enabled = false;
     }
     [container addSubview:menuButton];
     menuButton.translatesAutoresizingMaskIntoConstraints = false;
@@ -628,7 +629,6 @@ static NSMutableArray *filterConversations(NSArray *conversations, IrisConversat
             }];
         } completion:nil];
     }
-
     return cell;
 }
 - (void)tableView:(UITableView *)tableView moveRowAtIndexPath:(NSIndexPath *)sourceIndexPath toIndexPath:(NSIndexPath *)destinationIndexPath {
@@ -691,11 +691,15 @@ static NSMutableArray *filterConversations(NSArray *conversations, IrisConversat
 %new
 - (void)setButtonHidden:(bool)hidden {
     if (!menuButton || menuButton.hidden == hidden) return;
-    if (menuButton.hidden) menuButton.hidden = false;
+    if (menuButton.hidden) {
+        menuButton.hidden = false;
+        menuButton.enabled = true;
+    }
     [UIView animateWithDuration:0.25 animations:^{
         menuButton.alpha = hidden ? 0 : 1;
     } completion:^(BOOL finished) {
         menuButton.hidden = hidden;
+        menuButton.enabled = !hidden;
     }];
 }
 %new
@@ -721,6 +725,9 @@ static NSMutableArray *filterConversations(NSArray *conversations, IrisConversat
                     dispatch_async(dispatch_get_main_queue(), ^{
                         isAuthenticated = true;
                         [self _switchFlag:flag tag:tag];
+                        if (shouldShowButtonAfterAuthentication) {
+                            [self setButtonHidden:false];
+                        }
                     });
                 } else if (fromMenuButton) {
                     dispatch_async(dispatch_get_main_queue(), ^{
@@ -745,10 +752,6 @@ static NSMutableArray *filterConversations(NSArray *conversations, IrisConversat
         if (idx != NSNotFound) {
             [menuButton reloadCollectionViewWithTopButtonModel:menuButton.buttonModels[idx] animated:true];
         }
-    }
-
-    if (shouldShowButtonAfterAuthentication) {
-        [self setButtonHidden:false];
     }
 
     if (!defaultNavigationBarTitle) {
